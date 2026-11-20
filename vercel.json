@@ -1,4 +1,4 @@
 {
   "cleanUrls": true,
-  "rewrites": [{ "source": "/painel", "destination": "/admin" }]
+  "redirects": [{ "source": "/painel", "destination": "/admin", "permanent": false }]
 }
