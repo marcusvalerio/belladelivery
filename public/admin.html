@@ -248,6 +248,15 @@ body.offline .top{box-shadow:inset 0 -4px 0 var(--accent)}body.offline .top::aft
 </style></head><body>
 <div id="app"></div>
 <script>
+/* multi-loja: /<loja> = site, /<loja>/painel = painel. Sem loja na URL = bella */
+(function(){var s=location.pathname.split("/").filter(Boolean)[0]||"";
+if(!s||s==="admin"||s==="painel"||s==="index"||s==="index.html"||s==="admin.html")s="bella";
+window.LOJA=s;fetch("/api/public?t="+encodeURIComponent(s)).then(function(r){return r.json()}).then(function(j){if(j.store&&j.store.name){window.LOJA_NOME=j.store.name;document.title=j.store.name+" · Painel";if(window.render)try{render()}catch(e){}}}).catch(function(){});window.SITE=s==="bella"?"/":"/"+s;window.PAINEL=s==="bella"?"/admin":"/"+s+"/painel";
+var f=window.fetch;window.fetch=function(u,o){if(typeof u==="string"&&u.indexOf("/api/")===0&&u.indexOf("/api/img?id=")!==0)u+=(u.indexOf("?")<0?"?":"&")+"t="+encodeURIComponent(s);return f.call(this,u,o)};
+if(s!=="bella")try{var g=Storage.prototype.getItem,st=Storage.prototype.setItem,rm=Storage.prototype.removeItem,k=function(x){return /^bella-/.test(x)?x+":"+s:x};
+Storage.prototype.getItem=function(x){return g.call(this,k(x))};Storage.prototype.setItem=function(x,v){return st.call(this,k(x),v)};Storage.prototype.removeItem=function(x){return rm.call(this,k(x))}}catch(e){}})();
+</script>
+<script>
 const SEEDP=[
  {id:1,cat:"Massas",name:"Macarrão à Bolonhesa",desc:"Espaguete ao molho bolonhesa da casa, parmesão e manjericão. 300 g.",price:1500,img:"macarrao",tag:"Mais pedido",addons:[["Catupiry",300],["Cheddar",300],["Milho",300],["Champignon",300],["Mussarela",300]]},
  {id:2,cat:"Batatas",name:"Batata Cheddar, Bacon & Linguiça",desc:"Batata crocante com cheddar cremoso, bacon e linguiça. 300 g.",price:1200,img:"batata",tag:"Pra dividir",addons:[]},
@@ -391,21 +400,21 @@ function render(){
   const role=u.role,nav=NAV.filter(n=>n[3].includes(role)),st=storeStatus();
   if(role!=="entregador"&&!nav.some(n=>n[0]===S.view))S.view=nav[0][0];
   const badge={pedidos:S.orders.filter(o=>o.status==="novo").length,cozinha:S.orders.filter(o=>o.status==="producao").length,estoque:S.stock.filter(x=>x.q<x.min).length};
-  let h=`<div class="band"></div><header class="top"><span class="logo">Bella!<small>${role==="entregador"?"entregador":"gestão"}</small></span><span class="sp"></span>
+  let h=`<div class="band"></div><header class="top"><span class="logo">${esc(window.LOJA_NOME||"Bella")}<small>${role==="entregador"?"entregador":"gestão"}</small></span><span class="sp"></span>
     ${role!=="entregador"?`<button class="pill ${st.open?"":"off"}" data-act="store" title="Toque para pausar ou retomar"><i></i>${st.label}</button>`:""}
     <span class="me"><span class="av" style="background:${RC[role]}">${esc(u.name[0])}</span><span><b>${esc(u.name)}</b><small>${ROLES[role]}</small></span></span><button class="btn sm ghost" data-act="logout">Sair</button></header>`;
   if(role==="entregador"){S.courier=u.rider;h+=vCourier()}
   else h+=`<div class="wrap"><nav aria-label="Seções">${nav.map(([k,i,t])=>`<button data-nav="${k}" class="${S.view===k?"on":""}"><span aria-hidden="true">${i}</span>${t}${badge[k]?`<b>${badge[k]}</b>`:""}</button>`).join("")}
-      <p class="foot">Tudo salvo no servidor. Celulares e computadores da equipe veem o mesmo.<br><a class="btn ghost sm" style="margin-top:8px" href="/" target="_blank">Ver site →</a></p></nav>
+      <p class="foot">Tudo salvo no servidor. Celulares e computadores da equipe veem o mesmo.<br><a class="btn ghost sm" style="margin-top:8px" href="${SITE}" target="_blank">Ver site →</a></p></nav>
       <main>${({pedidos:vPedidos,cozinha:vCozinha,pdv:vPDV,cardapio:vCardapio,estoque:vEstoque,entregas:vEntregas,area:vArea,caixa:vCaixa,clientes:vClientes,relatorios:vRel,app:vCourier,config:vConfig})[S.view]()}</main></div>`;
   app.innerHTML=h;tick();
 }
 function vLogin(){const sel=S.loginSel&&S.loginUsers.find(x=>x.id===S.loginSel);
-  return`<div class="band"></div><div class="login"><span class="logo" style="font-size:48px">Bella!</span><p class="sub" style="margin:10px auto 18px">Quem está entrando?</p>
+  return`<div class="band"></div><div class="login"><span class="logo" style="font-size:40px">${esc(window.LOJA_NOME||"Bella")}</span><p class="sub" style="margin:10px auto 18px">Quem está entrando?</p>
   <div class="users">${S.loginUsers.map(u=>`<button class="ut ${sel&&sel.id===u.id?"on":""}" data-login="${u.id}"><span class="av" style="background:${RC[u.role]}">${esc(u.name[0])}</span><b>${esc(u.name)}</b><small>${ROLES[u.role]}</small></button>`).join("")}</div>
   ${sel?`<div class="pinbox"><p>PIN de <b>${esc(sel.name)}</b></p><div class="dots">${[0,1,2,3].map(i=>`<i class="${S.pinIn.length>i?"on":""}"></i>`).join("")}</div>
    <div class="pad">${["1","2","3","4","5","6","7","8","9","","0","⌫"].map(k=>k===""?"<span></span>":`<button data-pin="${k}" aria-label="${k==="⌫"?"Apagar":k}">${k}</button>`).join("")}</div></div>`:""}
-  <p class="hint" style="text-align:center">Primeiro acesso: Bella entra com 1234. Troque todos os PINs em Configurações › Equipe.</p></div>`}
+  <p class="hint" style="text-align:center">Entre com o PIN de 4 números. Troque os PINs em Configurações › Equipe.</p></div>`}
 function tick(){const now=Date.now();document.querySelectorAll("[data-t]").forEach(e=>{const m=Math.floor((now-+e.dataset.t)/60000);e.textContent=m<1?"agora":`${m} min`;e.classList.toggle("late",m>=30)})}
 setInterval(tick,15000);
 
@@ -485,7 +494,7 @@ function zoneCard(z){const sel=S.sel===z.id;return`<div class="zc ${sel?"on":""}
   ${z.type==="circle"?`<label><small>Raio exato (km)</small><input class="in" data-zf="r" value="${(z.r/100).toFixed(1).replace(".",",")}" inputmode="decimal"></label>`:""}
   <div style="display:flex;justify-content:space-between;align-items:center"><label class="chk"><input type="checkbox" data-zf="on" ${z.on?"checked":""}> Zona ativa</label><button class="btn sm ghost" data-act="zdel">Excluir</button></div></div>`:""}</div>`}
 function vArea(){
-  return`<div class="hd"><div><h1 class="t">Área de entrega</h1><p class="sub">Desenhe onde a Bella entrega. Cada zona tem sua taxa e tempo. O site usa isso no checkout: o cliente digita o endereço e já vê se entregamos e quanto custa.</p></div></div>
+  return`<div class="hd"><div><h1 class="t">Área de entrega</h1><p class="sub">Desenhe onde a loja entrega. Cada zona tem sua taxa e tempo. O site usa isso no checkout: o cliente digita o endereço e já vê se entregamos e quanto custa.</p></div></div>
   <div class="mapgrid"><div><div class="mapcard">${mapSVG({edit:true,id:"map",extra:`<g id="pinl">${pinMk(S.pin,"📍","#233b2b","pin")}</g>`})}
    <div class="maptools"><button class="btn sm" data-act="zcircle">+ Raio</button><button class="btn sm" data-act="zpoly">+ Área livre</button></div><div class="legend">Mapa © OpenStreetMap</div></div>
    <p class="hint"><b>Raio:</b> arraste a bolinha do centro para mover e a alça ↔ para esticar ou encolher. <b>Área livre:</b> puxe os pontos grandes; as bolinhas do meio criam pontos novos; dois toques num ponto apagam. Quando um endereço cai em duas zonas, vale a taxa mais barata.</p></div>
@@ -622,7 +631,7 @@ function vConfig(){const t=S.cfg,st=storeStatus();let body="";
   if(t==="loja")body=`<div class="card" style="max-width:720px"><p class="sec">Endereço da loja</p><p class="sub">É daqui que saem os raios de entrega e as rotas dos entregadores. Atual: <b>${esc(S.store.addr||"não definido")}</b></p>
    <div class="geo" style="margin-top:10px"><input class="in" data-geoq="store" value="${esc(S.geoFor==="store"?S.geoQ:"")}" placeholder="Rua, número, bairro, cidade"><button class="btn sm red" data-act="geo" data-id="store">Buscar</button></div>${geoList("store")}
    <span class="lbl">Nome da loja</span><input class="in" data-store="name" value="${esc(S.store.name||"")}"></div>
-   <div class="card" style="max-width:720px;margin-top:14px"><p class="sec">Links</p><p class="sub">Site para os clientes: <a href="/" target="_blank"><b>${location.host}</b></a><br>Painel da equipe: <b>${location.host}/painel</b></p></div>`;
+   <div class="card" style="max-width:720px;margin-top:14px"><p class="sec">Links</p><p class="sub">Site para os clientes: <a href="${SITE}" target="_blank"><b>${location.host}${SITE==="/"?"":SITE}</b></a><br>Painel da equipe: <b>${location.host}${PAINEL}</b></p></div>`;
   else if(t==="horarios")body=`<div class="card"><p class="sec">Horário de funcionamento <span class="pill ${st.open?"":"off"}" style="margin-left:8px"><i></i>${st.label}</span></p>
    <table class="tbl"><tbody>${S.hours.map((h,i)=>`<tr><td style="width:150px"><label class="chk"><input type="checkbox" data-hr="${i}" data-k="on" ${h.on?"checked":""}> ${DOW[i]}</label></td>
     <td>${h.on?`<span class="hrs"><input class="in" type="time" data-hr="${i}" data-k="a" value="${h.a}"> até <input class="in" type="time" data-hr="${i}" data-k="b" value="${h.b}"></span>`:`<span style="color:var(--muted);font-weight:800">Fechado</span>`}</td></tr>`).join("")}</tbody></table>

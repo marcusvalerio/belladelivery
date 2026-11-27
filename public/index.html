@@ -139,6 +139,15 @@ body{padding:0!important;background:#efe4cf}
 </head><body>
 <div class="phone" id="phone" data-m="c"><div class="screen" id="screen"></div></div>
 <script>
+/* multi-loja: /<loja> = site, /<loja>/painel = painel. Sem loja na URL = bella */
+(function(){var s=location.pathname.split("/").filter(Boolean)[0]||"";
+if(!s||s==="admin"||s==="painel"||s==="index"||s==="index.html"||s==="admin.html")s="bella";
+window.LOJA=s;window.SITE=s==="bella"?"/":"/"+s;window.PAINEL=s==="bella"?"/admin":"/"+s+"/painel";
+var f=window.fetch;window.fetch=function(u,o){if(typeof u==="string"&&u.indexOf("/api/")===0&&u.indexOf("/api/img?id=")!==0)u+=(u.indexOf("?")<0?"?":"&")+"t="+encodeURIComponent(s);return f.call(this,u,o)};
+if(s!=="bella")try{var g=Storage.prototype.getItem,st=Storage.prototype.setItem,rm=Storage.prototype.removeItem,k=function(x){return /^bella-/.test(x)?x+":"+s:x};
+Storage.prototype.getItem=function(x){return g.call(this,k(x))};Storage.prototype.setItem=function(x,v){return st.call(this,k(x),v)};Storage.prototype.removeItem=function(x){return rm.call(this,k(x))}}catch(e){}})();
+</script>
+<script>
 /* ===== Bella · site do cliente (dados reais do painel) ===== */
 const brl=c=>(c/100).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -173,7 +182,7 @@ const totalNow=()=>sub()-disc()+(S.form.type==="delivery"?fee():0);
 function toast(t){const o=phone.querySelector(".toast");o&&o.remove();const d=document.createElement("div");d.className="toast";d.textContent=t;phone.appendChild(d);clearTimeout(toastT);toastT=setTimeout(()=>d.remove(),2400)}
 
 function menu(){const cats=D.cats.filter(c=>D.products.some(p=>p.cat===c));if(!S.cat)S.cat=cats[0];const h=D.products.find(p=>p.tag==="Mais pedido")||D.products[0];
-  return`<div class="c-band"></div><div class="c-head"><span class="c-logo">Bella!</span><span class="c-pill">${D.open?"●":"○"} ${openLabel()}</span></div>
+  return`<div class="c-band"></div><div class="c-head"><span class="c-logo">${esc(D.store.name||"Bella")}</span><span class="c-pill">${D.open?"●":"○"} ${openLabel()}</span></div>
   ${!D.open?`<div class="closed">A cozinha está fechada agora. Dá para olhar o cardápio, e os pedidos voltam assim que abrirmos. 🍝</div>`:""}
   ${h?`<div class="c-hero" data-open="${h.id}" role="button" tabindex="0"><span class="stk">${brl(h.price)}</span><h1>Massa quentinha, do jeito da nonna.</h1><p>${esc(h.name)}. ${h.addons.length?"Turbine com "+esc(h.addons[0][0].toLowerCase())+"!":""}</p><img src="${h.img}" alt=""></div>`:""}
   ${D.loyal&&D.loyal.on?`<p class="loyal">🎁 A cada ${D.loyal.n} pedidos você ganha ${esc(D.loyal.reward)}.</p>`:""}
@@ -186,15 +195,15 @@ const topbar=(t,s,back)=>`<div class="top"><button class="circle" data-go="${bac
 const steps=n=>`<div class="steps">${["Sacola","Entrega","Pagamento"].map((t,i)=>`<span class="${i<=n?"on":""}"><em>${i<n?"✓":i+1}</em>${t}</span>`).join("<hr>")}</div>`;
 const bar=(label,go,dis)=>`<div class="bar"><button class="barbtn" data-go="${go}" ${dis?"disabled":""}><span style="text-align:left">${brl(totalNow())}<small>${S.form.type==="delivery"?(zone()?"Total · com entrega":"Total · sem a entrega"):"Total · retirada"}</small></span><span>${label} →</span></button></div>`;
 
-function cartView(){if(!S.cart.length)return topbar("Sua sacola","Bella","menu")+`<div class="empty"><h3>Sacola vazia</h3><p>Volte ao cardápio e escolha algo gostoso.</p></div>`;
+function cartView(){if(!S.cart.length)return topbar("Sua sacola",esc(D.store.name||"Bella"),"menu")+`<div class="empty"><h3>Sacola vazia</h3><p>Volte ao cardápio e escolha algo gostoso.</p></div>`;
   const sugg=D.products.filter(p=>!p.out&&!S.cart.some(l=>l.pid===p.id)).slice(0,3);
-  return topbar("Sua sacola","Bella","menu")+steps(0)+`<div class="pad">
+  return topbar("Sua sacola",esc(D.store.name||"Bella"),"menu")+steps(0)+`<div class="pad">
    ${S.cart.map((l,i)=>{const p=prod(l.pid);return`<div class="cline"><img src="${p.img}" alt=""><div class="t"><b>${esc(p.name)}</b><small>${[...selLabel(p,l.sel),...l.adds.map(a=>"+ "+a)].map(esc).join(" · ")||"Do jeito da casa"}${l.note?" · “"+esc(l.note)+"”":""}</small><div class="qty"><button data-q="${i}" data-d="-1" aria-label="Menos">−</button><span>${l.qty}</span><button data-q="${i}" data-d="1" aria-label="Mais">+</button></div></div><span class="price">${brl(lineTotal(l))}</span></div>`}).join("")}
    ${sugg.length?`<div class="lbl">Que tal acompanhar?<small>1 toque</small></div><div class="opts">${sugg.map(p=>`<button class="opt" data-quick="${p.id}"><img src="${p.img}" alt="" style="width:40px;height:40px;border-radius:12px;object-fit:cover"><span style="flex:1"><b>${esc(p.name)}</b><small>${brl(p.price)}</small></span><b>+</b></button>`).join("")}</div>`:""}
    <div class="bill"><div><span>Subtotal</span><span>${brl(sub())}</span></div></div></div>${bar("Continuar","delivery")}`}
 
 function deliveryView(){const f=S.form,z=zone();
-  return topbar("Entrega","Bella","cart")+steps(1)+`<div class="pad">
+  return topbar("Entrega",esc(D.store.name||"Bella"),"cart")+steps(1)+`<div class="pad">
    <div class="seg2"><button data-type="delivery" class="${f.type==="delivery"?"on":""}">🛵 Entregar</button><button data-type="retirada" class="${f.type==="retirada"?"on":""}">🛍️ Retirar no balcão</button></div>
    <div class="field"><span class="ic">🙂</span><label><small>Seu nome</small><input data-f="nome" value="${esc(f.nome)}" placeholder="Como te chamamos?" autocomplete="name"></label></div>
    <div class="field"><span class="ic">📱</span><label><small>WhatsApp (com DDD)</small><input data-f="fone" value="${esc(f.fone)}" placeholder="(11) 90000-0000" inputmode="tel" autocomplete="tel"></label></div>
@@ -208,7 +217,7 @@ function deliveryView(){const f=S.form,z=zone();
    ${bar("Ir para pagamento","pay")}`}
 
 function payView(){const f=S.form,O=[["pix","Pix","Na entrega ou pelo WhatsApp da loja"],["cartao","Cartão na entrega","Crédito ou débito na maquininha"],["dinheiro","Dinheiro","Avise se precisa de troco"]];
-  return topbar("Pagamento","Bella","delivery")+steps(2)+`<div class="pad"><div class="opts">
+  return topbar("Pagamento",esc(D.store.name||"Bella"),"delivery")+steps(2)+`<div class="pad"><div class="opts">
    ${O.map(([k,t,d])=>`<button class="opt ${f.pay===k?"on":""}" data-pay="${k}"><i></i><span><b>${t}</b><small>${d}</small></span></button>`).join("")}</div>
    ${f.pay==="dinheiro"?`<div class="field"><span class="ic">💵</span><label><small>Troco para (opcional)</small><input data-f="troco" value="${esc(f.troco)}" placeholder="R$ 50,00" inputmode="decimal"></label></div>`:""}
    <div class="field"><span class="ic">🎟️</span><label><small>Cupom (opcional)</small><input data-f="cupom" value="${esc(f.cupom)}" placeholder="BEMVINDO" style="text-transform:uppercase"></label><button class="mini" data-act="cupom">Aplicar</button></div>
@@ -291,7 +300,7 @@ phone.addEventListener("click",async e=>{const t=e.target.closest("button,[data-
 phone.addEventListener("input",e=>{const t=e.target;if(t.dataset.f){S.form[t.dataset.f]=t.value;if(t.dataset.f==="q"){S.form.lat=null;S.form.lng=null}if(t.dataset.f==="cupom")S.cp=null}else if("note" in t.dataset)S.sheet.note=t.value});
 phone.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset.f==="q"){e.preventDefault();phone.querySelector('[data-act="geo"]').click()}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&S.sheet){S.sheet=null;render(true)}});
-async function loadData(first){try{const r=await fetch("/api/public");if(!r.ok)throw 0;const j=await r.json();const was=D;D=j;
+async function loadData(first){try{const r=await fetch("/api/public");if(!r.ok)throw 0;const j=await r.json();const was=D;D=j;if(j.store&&j.store.name)document.title=j.store.name+" · Peça online";
   S.cart=S.cart.filter(l=>{const p=prod(l.pid);return p&&!p.out});if(first||(S.screen==="menu"&&!S.sheet))render(!first)}catch(e){if(first){scr.innerHTML=`<div class="empty"><h3>Não conseguimos carregar</h3><p>Verifique sua internet e recarregue a página.</p></div>`}}}
 loadData(true).then(()=>{if(S.order){S.screen="done";render();track()}});
 setInterval(()=>loadData(false),60000);

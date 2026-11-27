@@ -1,10 +1,11 @@
-import { send, kvGet, q } from "./_lib.js";
+import { send, kvGet, q, tenant } from "./_lib.js";
 // GET /api/geocode?q=endereço -> [{label,lat,lng}]  (OpenStreetMap / Nominatim, perto da loja)
 export default async function handler(req, res) {
   try {
     const text = String(q(req, "q") || "").trim().slice(0, 200);
     if (text.length < 4) return send(res, 200, []);
-    const st = (await kvGet("store")) || { lat: -23.55, lng: -46.63 };
+    const T = await tenant(req);
+    const st = (T && await kvGet(T.slug, "store")) || { lat: -23.55, lng: -46.63 };
     const d = 0.35, vb = [st.lng - d, st.lat + d, st.lng + d, st.lat - d].join(",");
     const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=br&viewbox=${vb}&q=${encodeURIComponent(text)}`;
     const r = await fetch(url, { headers: { "user-agent": "BellaDelivery/1.0", "accept-language": "pt-BR" } });

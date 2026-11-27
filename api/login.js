@@ -1,21 +1,20 @@
-import { send, readBody, sign, auth, ensureSeed, kvGet, q } from "./_lib.js";
-// GET  /api/login        -> lista de pessoas (sem PIN) para a tela de entrada
-// GET  /api/login?me=1   -> quem é o dono do token
-// POST /api/login {id,pin} -> token
+import { send, readBody, sign, auth, ensureSeed, kvGet, q, ctx } from "./_lib.js";
+// GET /api/login?t=loja | ?me=1 | POST {id,pin}
 export default async function handler(req, res) {
   try {
-    await ensureSeed();
-    const users = (await kvGet("users")) || [];
+    const c = await ctx(req, res, false); if (!c) return; const { t, T } = c;
+    await ensureSeed(t);
+    const users = (await kvGet(t, "users")) || [];
     if (req.method === "GET") {
-      if (q(req, "me")) { const a = auth(req); const u = a && users.find(x => x.id === a.id); return u ? send(res, 200, { id: u.id, role: u.role }) : send(res, 401, { error: "auth" }); }
+      if (q(req, "me")) { const a = auth(req); const u = a && (a.t || "bella") === t && users.find(x => x.id === a.id); return u ? send(res, 200, { id: u.id, role: u.role }) : send(res, 401, { error: "auth" }); }
       return send(res, 200, users.map(u => ({ id: u.id, name: u.name, role: u.role })));
     }
     if (req.method === "POST") {
       const { id, pin } = await readBody(req);
       const u = users.find(x => x.id === id);
-      await new Promise(r => setTimeout(r, 300)); // freia tentativa e erro
+      await new Promise(r => setTimeout(r, 300));
       if (!u || String(u.pin) !== String(pin)) return send(res, 401, { error: "PIN incorreto" });
-      return send(res, 200, { token: sign({ id: u.id, role: u.role }), user: { id: u.id, name: u.name, role: u.role } });
+      return send(res, 200, { token: sign({ t, id: u.id, role: u.role }), user: { id: u.id, name: u.name, role: u.role }, loja: T.name });
     }
     send(res, 405, { error: "método" });
   } catch (e) { send(res, 500, { error: String(e.message || e) }); }

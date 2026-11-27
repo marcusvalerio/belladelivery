@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Central · Restaurantes</title>
+<style>
+:root{--bg:#f6f3ee;--card:#fff;--ink:#231d17;--mut:#7a7066;--line:#e7e0d6;--acc:#b8322a;--ok:#2f7d4f;--warn:#b7791f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:26px;margin:0}h2{font-size:17px;margin:0 0 12px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.sub{color:var(--mut);margin:4px 0 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.kpi b{display:block;font-size:26px}.kpi span{color:var(--mut);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.r h3{margin:0;font-size:18px}.r .slug{color:var(--mut);font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0;text-align:center}
+.stats div{background:var(--bg);border-radius:10px;padding:8px}.stats b{display:block;font-size:18px}.stats span{font-size:12px;color:var(--mut)}
+.links a{display:block;color:var(--acc);font-size:14px;word-break:break-all;margin:2px 0}
+button,.btn{font:inherit;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 14px;cursor:pointer;color:var(--ink);text-decoration:none}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+button:disabled{opacity:.5}
+input{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;width:100%;background:#fff;color:var(--ink)}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+.tag{font-size:12px;padding:3px 9px;border-radius:99px;font-weight:600}.on{background:#e3f1e8;color:var(--ok)}.off{background:#f6e3e1;color:var(--acc)}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 14px}
+.err{color:var(--acc);min-height:20px;margin:8px 0 0}
+.login{max-width:360px;margin:12vh auto}
+.hint{font-size:12px;color:var(--mut)}
+dialog{border:none;border-radius:14px;padding:20px;max-width:420px;width:calc(100% - 32px)}
+</style></head><body><div class="wrap" id="app"></div>
+<script>
+const $=s=>document.querySelector(s),app=$("#app");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const brl=c=>(Number(c||0)/100).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+let TOKEN=null;try{TOKEN=localStorage.getItem("central-token")}catch(e){}
+let LIST=[];
+async function api(body){const r=await fetch("/api/central",{method:body?"POST":"GET",headers:{"content-type":"application/json",...(TOKEN?{authorization:"Bearer "+TOKEN}:{})},body:body?JSON.stringify(body):undefined});
+  const j=await r.json().catch(()=>({}));if(r.status===401&&!(body&&body.action==="login")){logout();throw new Error("Sessão expirada")}if(!r.ok)throw new Error(j.error||"Erro "+r.status);return j}
+function logout(){TOKEN=null;try{localStorage.removeItem("central-token")}catch(e){}loginView()}
+function loginView(){app.innerHTML=`<div class="login card"><h1>Central</h1><p class="sub">Administração dos restaurantes</p>
+  <form id="lf"><label>Senha</label><input type="password" id="pw" autocomplete="current-password" autofocus><p class="err" id="le"></p><button class="pri" style="width:100%">Entrar</button></form></div>`;
+  $("#lf").onsubmit=async e=>{e.preventDefault();$("#le").textContent="";try{const j=await api({action:"login",senha:$("#pw").value});TOKEN=j.token;try{localStorage.setItem("central-token",TOKEN)}catch(e){}load()}catch(err){$("#le").textContent=err.message}}}
+async function load(){try{LIST=await api();view()}catch(e){if(TOKEN)app.innerHTML=`<p class="err">${esc(e.message)}</p>`}}
+function view(){const H=location.origin,act=LIST.filter(r=>r.active);
+  app.innerHTML=`<div class="top"><div><h1>Central</h1><p class="sub">${LIST.length} restaurante${LIST.length===1?"":"s"} cadastrado${LIST.length===1?"":"s"}</p></div><div class="row"><button onclick="load()">Atualizar</button><button onclick="logout()">Sair</button></div></div>
+  <div class="kpis"><div class="card kpi"><b>${act.length}</b><span>restaurantes ativos</span></div>
+   <div class="card kpi"><b>${LIST.reduce((s,r)=>s+r.hoje,0)}</b><span>pedidos nas últimas 24h</span></div>
+   <div class="card kpi"><b>${LIST.reduce((s,r)=>s+r.mes,0)}</b><span>pedidos em 30 dias</span></div>
+   <div class="card kpi"><b>${brl(LIST.reduce((s,r)=>s+Number(r.fat_mes),0))}</b><span>vendido em 30 dias</span></div></div>
+  <div class="grid">${LIST.map(r=>{const site=r.slug==="bella"?H+"/":H+"/"+r.slug,pn=r.slug==="bella"?H+"/admin":H+"/"+r.slug+"/painel";
+   return`<div class="card r"><div class="row" style="justify-content:space-between"><div><h3>${esc(r.name)}</h3><span class="slug">${esc(r.owner||"")}${r.phone?" · "+esc(r.phone):""}</span></div><span class="tag ${r.active?"on":"off"}">${r.active?"Ativo":"Desativado"}</span></div>
+   <div class="stats"><div><b>${r.hoje}</b><span>24h</span></div><div><b>${r.mes}</b><span>30 dias</span></div><div><b>${brl(r.fat_mes)}</b><span>vendas 30d</span></div></div>
+   <div class="links"><a href="${site}" target="_blank">Site: ${esc(site.replace(/^https?:\/\//,""))}</a><a href="${pn}" target="_blank">Painel: ${esc(pn.replace(/^https?:\/\//,""))}</a></div>
+   <p class="hint">Último pedido: ${r.ultimo?new Date(r.ultimo).toLocaleString("pt-BR"):"nenhum ainda"}</p>
+   <div class="row"><button onclick="pin('${r.slug}')">Novo PIN do dono</button><button onclick="toggle('${r.slug}',${!r.active})">${r.active?"Desativar":"Reativar"}</button></div></div>`}).join("")}</div>
+  <div class="card" style="margin-top:18px"><h2>Cadastrar restaurante</h2>
+   <form id="nf"><div class="form"><div><label>Nome do restaurante</label><input id="n_name" placeholder="Ex.: Cantina do Zé" required></div>
+    <div><label>Endereço no site</label><input id="n_slug" placeholder="cantina-do-ze" pattern="[a-z0-9-]{2,40}" required></div>
+    <div><label>Nome do dono</label><input id="n_owner" placeholder="José" required></div>
+    <div><label>WhatsApp do dono</label><input id="n_phone" placeholder="(11) 99999-0000"></div>
+    <div><label>PIN de acesso (4 números)</label><input id="n_pin" inputmode="numeric" pattern="\\d{4}" maxlength="4" required></div></div>
+    <p class="hint">O site fica em <b>${esc(location.host)}/<span id="n_prev">endereco</span></b> e o painel em <b>/<span id="n_prev2">endereco</span>/painel</b>. A loja começa pausada com um cardápio de exemplo; o dono ajusta e abre pelo painel.</p>
+    <p class="err" id="ne"></p><button class="pri">Cadastrar</button></form></div>`;
+  const sl=t=>t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+  let touched=false;const ns=$("#n_slug"),prev=()=>{$("#n_prev").textContent=$("#n_prev2").textContent=ns.value||"endereco"};
+  $("#n_name").oninput=e=>{if(!touched){ns.value=sl(e.target.value);prev()}};ns.oninput=()=>{touched=true;ns.value=sl(ns.value);prev()};
+  $("#nf").onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;$("#ne").textContent="";
+   try{await api({action:"create",name:$("#n_name").value,slug:ns.value,owner:$("#n_owner").value,phone:$("#n_phone").value,pin:$("#n_pin").value});await load()}catch(err){$("#ne").textContent=err.message;b.disabled=false}}}
+async function pin(slug){const p=prompt("Novo PIN de 4 números para o dono:");if(p==null)return;try{await api({action:"pin",slug,pin:p.trim()});alert("PIN alterado.")}catch(e){alert(e.message)}}
+async function toggle(slug,active){if(!active&&!confirm("Desativar? O site e o painel desse restaurante param de funcionar até reativar."))return;try{await api({action:"toggle",slug,active});load()}catch(e){alert(e.message)}}
+TOKEN?load():loginView();
+</script></body></html>
