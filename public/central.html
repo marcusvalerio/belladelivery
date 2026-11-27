@@ -60,7 +60,7 @@ function view(){const H=location.origin,act=LIST.filter(r=>r.active);
     <div><label>Nome do dono</label><input id="n_owner" placeholder="José" required></div>
     <div><label>WhatsApp do dono</label><input id="n_phone" placeholder="(11) 99999-0000"></div>
     <div><label>PIN de acesso (4 números)</label><input id="n_pin" inputmode="numeric" pattern="\\d{4}" maxlength="4" required></div></div>
-    <p class="hint">O site fica em <b>${esc(location.host)}/<span id="n_prev">endereco</span></b> e o painel em <b>/<span id="n_prev2">endereco</span>/painel</b>. A loja começa pausada com um cardápio de exemplo; o dono ajusta e abre pelo painel.</p>
+    <p class="hint">O site fica em <b>${esc(location.host)}/<span id="n_prev">endereco</span></b> e o painel em <b>/<span id="n_prev2">endereco</span>/painel</b>. A loja começa pausada e vazia; o dono segue o checklist no painel (endereço, cardápio, área, horários e equipe) e abre a loja.</p>
     <p class="err" id="ne"></p><button class="pri">Cadastrar</button></form></div>`;
   const sl=t=>t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
   let touched=false;const ns=$("#n_slug"),prev=()=>{$("#n_prev").textContent=$("#n_prev2").textContent=ns.value||"endereco"};
