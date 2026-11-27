@@ -42,7 +42,7 @@ export default async function handler(req, res) {
       await sql`insert into tenants(slug,name,owner,phone) values(${slug}, ${name}, ${owner}, ${phone})`;
       const seed = { ...DEFAULTS,
         store: { ...DEFAULTS.store, name, addr: "Endereço não configurado: ajuste em Configurações › Loja" },
-        users: [{ id: "u1", name: owner, role: "dono", pin, mustChange: true }],
+        users: [{ id: "u1", name: owner, role: "dono", pin }],
         riders: [], coupons: [], caixa: { open: false }, paused: true,
         cats: [], products: [], stock: [], zones: [], holidays: [],
         hours: [0,1,2,3,4,5,6].map(() => ({ on: false, a: "11:00", b: "23:00" })) };
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
       const users = (await kvGet(slug, "users")) || [];
       const u = users.find(x => x.role === "dono");
       if (!u) return send(res, 400, { error: "Loja sem usuário dono" });
-      u.pin = String(b.pin); u.mustChange = true; await kvSet(slug, "users", users);
+      u.pin = String(b.pin); await kvSet(slug, "users", users);
       return send(res, 200, { ok: true });
     }
     send(res, 400, { error: "ação" });

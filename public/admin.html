@@ -412,7 +412,7 @@ function render(){
 function vLogin(){const sel=S.loginSel&&S.loginUsers.find(x=>x.id===S.loginSel);
   return`<div class="band"></div><div class="login"><span class="logo" style="font-size:40px">${esc(window.LOJA_NOME||"Bella")}</span><p class="sub" style="margin:10px auto 18px">Quem está entrando?</p>
   <div class="users">${S.loginUsers.map(u=>`<button class="ut ${sel&&sel.id===u.id?"on":""}" data-login="${u.id}"><span class="av" style="background:${RC[u.role]}">${esc(u.name[0])}</span><b>${esc(u.name.replace(/ \(dono\)$/,""))}</b><small>${ROLES[u.role]}</small></button>`).join("")}</div>
-  ${sel?`<div class="pinbox"><p>${S.chg?(S.chg.first?`Confirme o PIN novo`:`Primeiro acesso: crie seu PIN novo, ${esc(sel.name.split(" ")[0])}`):`PIN de <b>${esc(sel.name)}</b>`}</p>${S.chg?`<small style="color:var(--muted)">4 números, diferente do PIN provisório</small>`:""}<div class="dots">${[0,1,2,3].map(i=>`<i class="${S.pinIn.length>i?"on":""}"></i>`).join("")}</div>
+  ${sel?`<div class="pinbox"><p>PIN de <b>${esc(sel.name)}</b></p><div class="dots">${[0,1,2,3].map(i=>`<i class="${S.pinIn.length>i?"on":""}"></i>`).join("")}</div>
    <div class="pad">${["1","2","3","4","5","6","7","8","9","","0","⌫"].map(k=>k===""?"<span></span>":`<button data-pin="${k}" aria-label="${k==="⌫"?"Apagar":k}">${k}</button>`).join("")}</div></div>`:""}
   <p class="hint" style="text-align:center">Entre com o PIN de 4 números. Troque os PINs em Configurações › Equipe.</p></div>`}
 function tick(){const now=Date.now();document.querySelectorAll("[data-t]").forEach(e=>{const m=Math.floor((now-+e.dataset.t)/60000);e.textContent=m<1?"agora":`${m} min`;e.classList.toggle("late",m>=30)})}
@@ -723,14 +723,10 @@ function comanda(o){const m=document.createElement("div");m.className="modal";m.
 
 document.addEventListener("click",e=>{
   const t=e.target.closest("button,[data-zsel],a");if(!t)return;const d=t.dataset;
-  if(d.login){S.loginSel=d.login;S.pinIn="";S.chg=null;return commit()}
+  if(d.login){S.loginSel=d.login;S.pinIn="";return commit()}
   if(d.pin!==undefined){S.pinIn=d.pin==="⌫"?S.pinIn.slice(0,-1):S.pinIn+d.pin;
-    if(S.pinIn.length===4&&S.chg){const c=S.chg,v=S.pinIn;S.pinIn="";if(!c.first){if(v===c.old){toast("Escolha um PIN diferente do provisório");return commit()}c.first=v;return commit()}
-      if(v!==c.first){c.first="";toast("Os PINs não conferem. Digite de novo");return commit()}
-      api("/api/login",{method:"POST",body:JSON.stringify({id:S.loginSel,pin:c.old,newPin:v})}).then(j=>{S.chg=null;toast("PIN novo salvo!");return j}).then(done).catch(e=>{S.chg=null;toast(e.message||"Erro");render()});return commit()}
-    if(S.pinIn.length===4){const id=S.loginSel,pin=S.pinIn;S.pinIn="";api("/api/login",{method:"POST",body:JSON.stringify({id,pin})}).then(j=>{if(j.mustChange){S.chg={old:pin,first:""};render();return}return done(j)}).catch(()=>{toast("PIN incorreto");render()})}return commit()}
-  async function done(j){if(!j)return;TOKEN=j.token;try{localStorage.setItem("bella-token",TOKEN)}catch(e){}
-      S.user=j.user.id;S.loginSel=null;await pull(true);const u=cur();if(!u)return;S.view=(NAV.find(n=>n[3].includes(u.role))||["pedidos"])[0];S.cTab="rota";render();setTimeout(()=>toast(`Olá, ${u.name.split(" ")[0]}!`),900)}
+    if(S.pinIn.length===4){const id=S.loginSel,pin=S.pinIn;S.pinIn="";api("/api/login",{method:"POST",body:JSON.stringify({id,pin})}).then(async j=>{TOKEN=j.token;try{localStorage.setItem("bella-token",TOKEN)}catch(e){}
+      S.user=j.user.id;S.loginSel=null;await pull(true);const u=cur();if(!u)return;S.view=(NAV.find(n=>n[3].includes(u.role))||["pedidos"])[0];S.cTab="rota";render();toast(`Olá, ${u.name.split(" ")[0]}!`)}).catch(()=>{toast("PIN incorreto");render()})}return commit()}
   if(d.cfg){S.cfg=d.cfg;return commit()}
   if(d.rep){S.rep=d.rep;return commit()}
   if(d.nav){S.view=d.nav;commit();scrollTo(0,0);return}
