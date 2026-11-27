@@ -53,7 +53,7 @@ function view(){const H=location.origin,act=LIST.filter(r=>r.active);
    <div class="stats"><div><b>${r.hoje}</b><span>24h</span></div><div><b>${r.mes}</b><span>30 dias</span></div><div><b>${brl(r.fat_mes)}</b><span>vendas 30d</span></div></div>
    <div class="links"><a href="${site}" target="_blank">Site: ${esc(site.replace(/^https?:\/\//,""))}</a><a href="${pn}" target="_blank">Painel: ${esc(pn.replace(/^https?:\/\//,""))}</a></div>
    <p class="hint">Último pedido: ${r.ultimo?new Date(r.ultimo).toLocaleString("pt-BR"):"nenhum ainda"}</p>
-   <div class="row"><button onclick="pin('${r.slug}')">Novo PIN do dono</button><button onclick="toggle('${r.slug}',${!r.active})">${r.active?"Desativar":"Reativar"}</button></div></div>`}).join("")}</div>
+   <div class="row"><button onclick="pin('${r.slug}')">Novo PIN do dono</button><button onclick="toggle('${r.slug}',${!r.active})">${r.active?"Desativar":"Reativar"}</button>${r.slug==="bella"?"":`<button onclick="del('${r.slug}')">Excluir</button>`}</div></div>`}).join("")}</div>
   <div class="card" style="margin-top:18px"><h2>Cadastrar restaurante</h2>
    <form id="nf"><div class="form"><div><label>Nome do restaurante</label><input id="n_name" placeholder="Ex.: Cantina do Zé" required></div>
     <div><label>Endereço no site</label><input id="n_slug" placeholder="cantina-do-ze" pattern="[a-z0-9-]{2,40}" required></div>
@@ -68,6 +68,7 @@ function view(){const H=location.origin,act=LIST.filter(r=>r.active);
   $("#nf").onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;$("#ne").textContent="";
    try{await api({action:"create",name:$("#n_name").value,slug:ns.value,owner:$("#n_owner").value,phone:$("#n_phone").value,pin:$("#n_pin").value});await load()}catch(err){$("#ne").textContent=err.message;b.disabled=false}}}
 async function pin(slug){const p=prompt("Novo PIN de 4 números para o dono:");if(p==null)return;try{await api({action:"pin",slug,pin:p.trim()});alert("PIN alterado.")}catch(e){alert(e.message)}}
+async function del(slug){const c=prompt(`Excluir de vez a loja "${slug}", com pedidos, cardápio e equipe? Isso não tem volta.\nDigite ${slug} para confirmar:`);if(c==null)return;try{await api({action:"delete",slug,confirm:c.trim()});load()}catch(e){alert(e.message)}}
 async function toggle(slug,active){if(!active&&!confirm("Desativar? O site e o painel desse restaurante param de funcionar até reativar."))return;try{await api({action:"toggle",slug,active});load()}catch(e){alert(e.message)}}
 TOKEN?load():loginView();
 </script></body></html>
