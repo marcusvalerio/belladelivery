@@ -12,7 +12,11 @@ export default async function handler(req, res) {
       if (DONO_ONLY.includes(k) && a.role !== "dono" && k !== "products") continue;
       if (k === "users") {
         const old = (await kvGet(t, "users")) || [];
-        v.forEach(u => { if (!/^\d{4}$/.test(String(u.pin || ""))) u.pin = (old.find(o => o.id === u.id) || {}).pin || "0000"; });
+        for (const u of v) if (!/^\d{4}$/.test(String(u.pin || ""))) {
+          const prev = (old.find(o => o.id === u.id) || {}).pin;
+          if (!prev) return send(res, 400, { error: `PIN inválido para ${u.name || "funcionário"}: use 4 números.` });
+          u.pin = prev;
+        }
       }
       await kvSet(t, k, v);
     }

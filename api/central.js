@@ -42,7 +42,7 @@ export default async function handler(req, res) {
       await sql`insert into tenants(slug,name,owner,phone) values(${slug}, ${name}, ${owner}, ${phone})`;
       const seed = { ...DEFAULTS,
         store: { ...DEFAULTS.store, name, addr: "Endereço não configurado: ajuste em Configurações › Loja" },
-        users: [{ id: "u1", name: `${owner} (dono)`, role: "dono", pin }],
+        users: [{ id: "u1", name: owner, role: "dono", pin }],
         riders: [], coupons: [], caixa: { open: false }, paused: true };
       for (const [k, v] of Object.entries(seed)) await kvSet(slug, k, v);
       return send(res, 200, { ok: true });

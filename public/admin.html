@@ -45,7 +45,7 @@ h1.t{font-family:"Shrikhand";font-weight:400;font-size:30px;color:var(--accent);
 .stat small{display:block;font-weight:800;color:var(--muted);font-size:12px}
 .stat b{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums}
 /* kanban */
-.kb{display:grid;grid-template-columns:repeat(5,minmax(205px,1fr));gap:12px;overflow-x:auto;padding-bottom:8px;align-items:start}
+.kb{display:grid;grid-template-columns:repeat(5,minmax(170px,1fr));gap:12px;overflow-x:auto;padding-bottom:8px;align-items:start}
 .col{background:var(--soft);border-radius:20px;padding:10px;min-height:200px}
 .col h3{font-weight:900;font-size:14px;display:flex;justify-content:space-between;padding:4px 6px 10px}
 .col h3 span{background:var(--card);border:2px solid var(--ink);border-radius:99px;padding:0 8px;font-size:12px}
@@ -235,7 +235,7 @@ body.offline .top{box-shadow:inset 0 -4px 0 var(--accent)}body.offline .top::aft
 .kpi div{border:2px solid var(--ink);border-radius:16px;padding:12px;background:var(--card)}
 .kpi small{display:block;font-size:11.5px;font-weight:900;color:var(--muted)}
 .kpi b{font-size:20px;font-weight:900}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99;background:var(--ink);color:var(--on-ink);padding:10px 16px;border-radius:99px;font-weight:900;font-size:13.5px;animation:pop .2s;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:99;background:var(--ink);color:var(--on-ink);padding:10px 16px;border-radius:99px;font-weight:900;font-size:13.5px;animation:pop .2s;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:80;display:grid;place-items:center;padding:16px}
 .comanda{background:#fff;color:#111;width:300px;max-width:100%;padding:18px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.5;border-radius:6px}
 .comanda hr{border:0;border-top:1px dashed #111;margin:8px 0}
@@ -402,7 +402,7 @@ function render(){
   const badge={pedidos:S.orders.filter(o=>o.status==="novo").length,cozinha:S.orders.filter(o=>o.status==="producao").length,estoque:S.stock.filter(x=>x.q<x.min).length};
   let h=`<div class="band"></div><header class="top"><span class="logo">${esc(window.LOJA_NOME||"Bella")}<small>${role==="entregador"?"entregador":"gestão"}</small></span><span class="sp"></span>
     ${role!=="entregador"?`<button class="pill ${st.open?"":"off"}" data-act="store" title="Toque para pausar ou retomar"><i></i>${st.label}</button>`:""}
-    <span class="me"><span class="av" style="background:${RC[role]}">${esc(u.name[0])}</span><span><b>${esc(u.name)}</b><small>${ROLES[role]}</small></span></span><button class="btn sm ghost" data-act="logout">Sair</button></header>`;
+    <span class="me"><span class="av" style="background:${RC[role]}">${esc(u.name[0])}</span><span><b>${esc(u.name.replace(/ \(dono\)$/,""))}</b><small>${ROLES[role]}</small></span></span><button class="btn sm ghost" data-act="logout">Sair</button></header>`;
   if(role==="entregador"){S.courier=u.rider;h+=vCourier()}
   else h+=`<div class="wrap"><nav aria-label="Seções">${nav.map(([k,i,t])=>`<button data-nav="${k}" class="${S.view===k?"on":""}"><span aria-hidden="true">${i}</span>${t}${badge[k]?`<b>${badge[k]}</b>`:""}</button>`).join("")}
       <p class="foot">Tudo salvo no servidor. Celulares e computadores da equipe veem o mesmo.<br><a class="btn ghost sm" style="margin-top:8px" href="${SITE}" target="_blank">Ver site →</a></p></nav>
@@ -411,7 +411,7 @@ function render(){
 }
 function vLogin(){const sel=S.loginSel&&S.loginUsers.find(x=>x.id===S.loginSel);
   return`<div class="band"></div><div class="login"><span class="logo" style="font-size:40px">${esc(window.LOJA_NOME||"Bella")}</span><p class="sub" style="margin:10px auto 18px">Quem está entrando?</p>
-  <div class="users">${S.loginUsers.map(u=>`<button class="ut ${sel&&sel.id===u.id?"on":""}" data-login="${u.id}"><span class="av" style="background:${RC[u.role]}">${esc(u.name[0])}</span><b>${esc(u.name)}</b><small>${ROLES[u.role]}</small></button>`).join("")}</div>
+  <div class="users">${S.loginUsers.map(u=>`<button class="ut ${sel&&sel.id===u.id?"on":""}" data-login="${u.id}"><span class="av" style="background:${RC[u.role]}">${esc(u.name[0])}</span><b>${esc(u.name.replace(/ \(dono\)$/,""))}</b><small>${ROLES[u.role]}</small></button>`).join("")}</div>
   ${sel?`<div class="pinbox"><p>PIN de <b>${esc(sel.name)}</b></p><div class="dots">${[0,1,2,3].map(i=>`<i class="${S.pinIn.length>i?"on":""}"></i>`).join("")}</div>
    <div class="pad">${["1","2","3","4","5","6","7","8","9","","0","⌫"].map(k=>k===""?"<span></span>":`<button data-pin="${k}" aria-label="${k==="⌫"?"Apagar":k}">${k}</button>`).join("")}</div></div>`:""}
   <p class="hint" style="text-align:center">Entre com o PIN de 4 números. Troque os PINs em Configurações › Equipe.</p></div>`}
@@ -437,7 +437,7 @@ function oCard(o){
 function vPedidos(){
   const day=S.orders.filter(o=>o.status!=="cancelado"&&o.t>=T0()),done=day.filter(o=>o.status==="entregue"),fat=done.reduce((s,o)=>s+total(o),0);
   const cols=[["novo","Novos"],["producao","Em produção"],["pronto","Prontos"],["rota","Em rota"],["entregue","Entregues"]];
-  return`<div class="hd"><div><h1 class="t">Pedidos ao vivo</h1><p class="sub">Tudo que entra pelo site, telefone e balcão cai aqui. Pedido novo toca um aviso e fica vermelho até alguém aceitar.</p></div><span class="sp"></span></div>
+  return`<div class="hd"><div><h1 class="t">Pedidos ao vivo</h1><p class="sub">Tudo que entra pelo site, telefone e balcão cai aqui. Pedido novo toca um aviso e fica vermelho até alguém aceitar.</p></div><span class="sp"></span></div>${setupCard()}
   <div class="stats"><div class="stat"><small>Faturado hoje</small><b>${brl(fat)}</b></div><div class="stat"><small>Pedidos hoje</small><b>${day.length}</b></div><div class="stat"><small>Ticket médio</small><b>${brl(done.length?fat/done.length:0)}</b></div><div class="stat"><small>Em rota agora</small><b>${S.orders.filter(o=>o.status==="rota").length}</b></div></div>
   <div class="kb">${cols.map(([k,t])=>{let L=S.orders.filter(o=>o.status===k);if(k==="entregue")L=L.sort((a,b)=>b.dAt-a.dAt).slice(0,5);else L.sort((a,b)=>a.t-b.t);
     return`<section class="col"><h3>${t}<span>${S.orders.filter(o=>o.status===k).length}</span></h3>${L.map(oCard).join("")||`<p class="empty">Nada aqui</p>`}</section>`}).join("")}</div>`}
@@ -466,7 +466,13 @@ function vPDV(){const d=S.pdv,c=pdvCalc();
     <div class="big"><span>Total</span><span>${brl(c.tot)}</span></div>${troco?`<div><span>Troco</span><b>${brl(troco)}</b></div>`:""}</div>
    <button class="btn red big" style="margin-top:12px" data-act="pdvsend" ${!d.cart.length||(d.type==="delivery"&&(d.lat==null||(!c.z&&!d.force)))?"disabled":""}>Lançar pedido · ${brl(c.tot)}</button></aside></div>`}
 
-/* ----- Entregas (despacho / TMS do dono) ----- */
+function setupCard(){if(cur().role!=="dono")return"";const a=(S.store.addr||"").trim();
+  const st=[[a&&!/não configurado/i.test(a),"Endereço da loja","config","loja"],[S.products.length>0,"Cardápio com pelo menos 1 prato","cardapio"],[S.zones.length>0,"Área e taxa de entrega","area"],[S.hours.some(h=>h.on),"Horário de funcionamento","config","horarios"],[S.users.length>1,"Equipe cadastrada (atendente, cozinha, entregador)","config","equipe"]];
+  const falta=st.filter(x=>!x[0]).length;if(!falta&&!S.paused)return"";
+  return`<div class="card" style="margin:0 0 14px"><p class="sec">${S.paused?"Sua loja está pausada: o site ainda não recebe pedidos":"Falta pouco para a loja ficar completa"}</p><p class="sub">Complete os passos abaixo e depois clique em <b>Abrir loja</b>.</p>
+  <div style="display:grid;gap:6px;margin-top:10px">${st.map(([ok,t,nav,cfg])=>`<div style="display:flex;align-items:center;gap:10px"><span aria-hidden="true">${ok?"✅":"⬜"}</span><span style="flex:1;${ok?"color:var(--muted)":"font-weight:800"}">${t}</span>${ok?"":`<button class="btn sm ghost" data-nav="${nav}"${cfg?` onclick="S.cfg='${cfg}'"`:""}>Fazer agora →</button>`}</div>`).join("")}</div>
+  ${S.paused?`<button class="btn red" style="margin-top:12px" data-act="store"${falta?" disabled title=\"Complete os passos acima\"":""}>Abrir loja</button>`:""}</div>`}
+/* ----- Entregas (despacho) ----- */
 function vEntregas(){
   const ready=S.orders.filter(o=>o.status==="pronto"&&o.type==="delivery").sort((a,b)=>a.t-b.t);
   S.disp=S.disp.filter(id=>ready.some(o=>o.id===id));
@@ -646,7 +652,7 @@ function vConfig(){const t=S.cfg,st=storeStatus();let body="";
   else body=`<div class="card" style="overflow-x:auto"><p class="sec">Equipe e acessos</p><table class="tbl"><thead><tr><th>Nome</th><th>Função</th><th>PIN</th><th>Pode acessar</th><th></th></tr></thead><tbody>
    ${S.users.map(u=>`<tr><td><input class="in" data-us="${u.id}" data-k="name" value="${esc(u.name)}"></td><td>${u.role==="entregador"||u.id===S.user?`<b>${ROLES[u.role]}</b>`:`<select class="in" data-us="${u.id}" data-k="role">${["dono","atendente","cozinha"].map(r=>`<option value="${r}" ${u.role===r?"selected":""}>${ROLES[r]}</option>`).join("")}</select>`}</td>
     <td><input class="in" data-us="${u.id}" data-k="pin" value="${u.pin}" maxlength="4" inputmode="numeric" style="width:80px"></td><td><small style="color:var(--muted);font-weight:700">${u.role==="entregador"?"App do entregador":NAV.filter(n=>n[3].includes(u.role)).map(n=>n[2]).join(", ")}</small></td>
-    <td>${u.id===S.user?"":`<button class="btn sm ghost" data-act="usdel" data-id="${u.id}" aria-label="Remover">✕</button>`}</td></tr>`).join("")}</tbody></table>
+    <td style="white-space:nowrap">${u.id===S.user?"":`<a class="btn sm ghost" target="_blank" rel="noopener" title="Enviar acesso pelo WhatsApp" href="https://wa.me/?text=${encodeURIComponent(`Olá, ${u.name}! Seu acesso ao sistema da ${S.store.name||"loja"}:\n${location.origin}${PAINEL}\nToque no seu nome e digite o PIN: ${u.pin}`)}">📲 Enviar</a> <button class="btn sm ghost" data-act="usdel" data-id="${u.id}" aria-label="Remover">✕</button>`}</td></tr>`).join("")}</tbody></table>
    <div class="addrow"><input class="in" id="un" placeholder="Nome da pessoa"><select class="in" id="ur"><option value="atendente">Atendente</option><option value="cozinha">Cozinha</option><option value="entregador">Entregador</option><option value="dono">Dono</option></select><button class="btn red" data-act="usadd">+ Adicionar</button></div>
    <p class="hint">Cada pessoa entra com o próprio PIN e só vê as telas da sua função. O PIN novo aparece ao criar; dá para trocar aqui.</p></div>`;
   return`<div class="hd"><div><h1 class="t">Configurações</h1></div><span class="sp"></span><div class="seg">${[["loja","Loja"],["horarios","Horários"],["whatsapp","WhatsApp"],["equipe","Equipe"]].map(([k,x])=>`<button data-cfg="${k}" class="${t===k?"on":""}">${x}</button>`).join("")}</div></div>${body}`}
@@ -702,7 +708,7 @@ function vCourier(){const r=S.riders.find(x=>x.id===S.courier),L=riderOrders(r.i
   }else{const D=S.orders.filter(o=>o.rider===r.id&&o.status==="entregue"&&o.dAt>=T0()).sort((a,b)=>b.dAt-a.dAt);
     body=`<div class="kpi"><div><small>Entregas hoje</small><b>${D.length}</b></div><div><small>Km rodados</small><b>${km((r.kmT||0)*100)}</b></div><div><small>A receber (taxas)</small><b>${brl(earned(r.id))}</b></div><div><small>Dinheiro p/ devolver</small><b>${brl(cashHeld(r.id))}</b></div></div>
     <p class="sec" style="margin-top:16px">Histórico</p><div class="list" style="margin-top:0">${D.map(o=>`<div class="li"><span class="n">✓</span><span class="t"><b>#${o.num??"…"} · ${esc(o.bairro)}</b><small>${hhmm(o.dAt)} · ${PAY[o.pay]}${o.km?" · "+km(o.km*100):""}</small></span><b>+${brl(o.fee)}</b></div>`).join("")||`<p class="empty">Nenhuma entrega ainda.</p>`}</div>`}
-  return`<div class="stage"><div class="cap"><h1 class="t">App do entregador</h1><p class="sub" style="margin-inline:auto">Funciona como um TMS: rota otimizada, ordem das paradas, o que cobrar em cada porta, código de entrega e acerto do dia.${cur().role==="dono"?` Ver como: <span class="seg" style="vertical-align:middle;margin-left:4px">${S.riders.map(x=>`<button data-courier="${x.id}" class="${x.id===r.id?"on":""}">${esc(x.name)}</button>`).join("")}</span>`:""}</p></div>
+  return`<div class="stage"><div class="cap"><h1 class="t">App do entregador</h1><p class="sub" style="margin-inline:auto">Rota otimizada, ordem das paradas, o que cobrar em cada porta, código de entrega e acerto do dia.${cur().role==="dono"?` Ver como: <span class="seg" style="vertical-align:middle;margin-left:4px">${S.riders.map(x=>`<button data-courier="${x.id}" class="${x.id===r.id?"on":""}">${esc(x.name)}</button>`).join("")}</span>`:""}</p></div>
    <div class="phone"><div class="ph-top"><span class="av" style="background:${r.color}">${r.name[0]}</span><div class="who"><b>${r.name}</b><small>${r.online?"Online · recebendo corridas":"Offline"}</small></div><button class="sw ${r.online?"on":""}" data-act="online" aria-label="Online"></button></div>
     <div class="ph-body" id="phb">${body}</div>
     <div class="ph-tabs">${[["rota","🗺️","Rota"],["disp","📦","Disponíveis"+(avail.length?` (${avail.length})`:"")],["ganhos","💰","Ganhos"]].map(([k,i,t])=>`<button data-ctab="${k}" class="${S.cTab===k?"on":""}"><i>${i}</i>${t}</button>`).join("")}</div></div></div>`}
